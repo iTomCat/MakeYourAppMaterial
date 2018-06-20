@@ -2,8 +2,10 @@ package com.example.xyzreader.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import com.android.volley.toolbox.NetworkImageView;
+import com.example.xyzreader.data.ArticleLoader;
 
 public class DynamicHeightNetworkImageView extends NetworkImageView {
     private float mAspectRatio = 1.5f;
