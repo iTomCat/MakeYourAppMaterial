@@ -1,6 +1,7 @@
 package com.example.xyzreader.ui;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityOptions;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -51,6 +52,8 @@ public class ArticleListActivity extends AppCompatActivity implements
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private ImageView iconXYZ;
+    private boolean manuallyRefresh = false;
+    private Adapter adapter;
 
 
     @SuppressLint("SimpleDateFormat")
@@ -78,9 +81,6 @@ public class ArticleListActivity extends AppCompatActivity implements
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         getLoaderManager().initLoader(0, null, this);
 
-        if (savedInstanceState == null) {
-            refresh();
-        }
     }
 
     private void initSwipeRefreshLayout(){
@@ -88,13 +88,14 @@ public class ArticleListActivity extends AppCompatActivity implements
         mSwipeRefreshLayout.setColorSchemeResources(
                 R.color.theme_accent,
                 R.color.theme_primary,
-                R.color.theme_primary);
+                R.color.theme_primary_dark);
 
         mSwipeRefreshLayout.setOnRefreshListener(
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
                     public void onRefresh() {
                         refresh();
+                        manuallyRefresh = true;
                     }
                 }
         );
@@ -107,6 +108,7 @@ public class ArticleListActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+
         registerReceiver(mRefreshingReceiver,
                 new IntentFilter(UpdaterService.BROADCAST_ACTION_STATE_CHANGE));
     }
@@ -124,13 +126,15 @@ public class ArticleListActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             if (UpdaterService.BROADCAST_ACTION_STATE_CHANGE.equals(intent.getAction())) {
                 mIsRefreshing = intent.getBooleanExtra(UpdaterService.EXTRA_REFRESHING, false);
-                updateRefreshingUI();
+                if (manuallyRefresh) updateRefreshingUI();
+
             }
         }
     };
 
     private void updateRefreshingUI() {
         mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
+        if (!mIsRefreshing) manuallyRefresh = false;
     }
 
     @Override
@@ -140,13 +144,14 @@ public class ArticleListActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        Adapter adapter = new Adapter(cursor, this);
+        adapter = new Adapter(cursor, this, this);
         adapter.setHasStableIds(true);
         mRecyclerView.setAdapter(adapter);
         int columnCount = getResources().getInteger(R.integer.list_column_count);
         StaggeredGridLayoutManager sglm =
                 new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(sglm);
+
     }
 
     @Override
@@ -165,9 +170,10 @@ public class ArticleListActivity extends AppCompatActivity implements
             // Somewhere in between
         }*/
 
-        double m = Math.abs(verticalOffset) * (-0.5) + getResources().getDimension(R.dimen.max_height);
-        iconXYZ.getLayoutParams().height = (int)m;
-        iconXYZ.requestLayout();
+       // Scaling Logo
+       double m = Math.abs(verticalOffset) * (-0.5) + getResources().getDimension(R.dimen.max_height);
+       iconXYZ.getLayoutParams().height = (int)m;
+       iconXYZ.requestLayout();
     }
 
 
@@ -175,10 +181,12 @@ public class ArticleListActivity extends AppCompatActivity implements
     private class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private Cursor mCursor;
         private Context mContext;
+        private AppCompatActivity mActivity;
 
-        Adapter(Cursor cursor, Context context) {
+        Adapter(Cursor cursor, Context context, AppCompatActivity activity) {
             mCursor = cursor;
             mContext = context;
+            mActivity = activity;
         }
 
         @Override
@@ -194,8 +202,46 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(mActivity);
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
+                        startActivity(intent, options.toBundle());
+
+                    }else{
+                        startActivity(new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    }
+
+
+                   /* ImageView image = (ImageView) view.findViewById(R.id.thumbnail);
+                    ArticleListActivity.this.getApplicationContext();
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        Bundle bundle = ActivityOptions
+                                 .makeSceneTransitionAnimation(
+                                         mActivity,
+                                         image,
+                                         image.getTransitionName())
+                                .toBundle();
+
+
+                        //Intent intent = new Intent();
+                        //intent.setAction(Intent.ACTION_VIEW);
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
+
+                        startActivity(intent, bundle);
+
+                        Log.d("asa", "CLICK " + ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
+
+                    }else{
+                        startActivity(new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    }
+*/
                 }
             });
             return vh;
@@ -260,7 +306,7 @@ public class ArticleListActivity extends AppCompatActivity implements
             builder.generate(new Palette.PaletteAsyncListener() {
                 @Override
                 public void onGenerated(Palette palette) {
-                    int selectedColor = palette.getMutedColor(0);
+                    int selectedColor = palette.getDarkMutedColor(0);
                     image.setBackgroundColor(selectedColor);
                 }
             }) ;

@@ -3,5 +3,12 @@
     <dimen name="detail_title_text_size">42sp</dimen>
     <dimen name="detail_body_text_size">20sp</dimen>
     <item name="detail_body_line_spacing_multiplier" format="float" type="fraction">1.3</item>
+
+    <dimen name="fab_elevation">6dp</dimen>
+    <dimen name="fab_press_translation_z">6dp</dimen>
     <dimen name="fab_margin">24dp</dimen>
+
+    <dimen name="max_height">90dp</dimen>
+    <dimen name="detail_body_top_margin">16dp</dimen>
+    <dimen name="keyline_margin">56dp</dimen>
 </resources>

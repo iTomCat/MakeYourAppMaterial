@@ -18,13 +18,22 @@
 <resources>
 
     <style name="Theme.Bacon" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">#15aec9</item>
-        <item name="colorPrimaryDark">#008aa7</item>
-        <item name="colorAccent">#c8ff00</item>
+        <item name="colorPrimary">@color/theme_primary</item>
+        <item name="colorPrimaryDark">@color/theme_primary_dark</item>
+        <item name="colorAccent">@color/theme_accent</item>
     </style>
 
-    <style name="Theme.Bacon.Detail">
-        <item name="android:statusBarColor">@android:color/transparent</item>
+    <style name="Theme.Bacon.Detail.Body" parent="@android:style/TextAppearance.DeviceDefault.Small">
+        <item name="android:textSize">@dimen/detail_body_text_size</item>
+        <item name="android:textColorLink">@color/theme_primary</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:lineSpacingMultiplier">@fraction/detail_body_line_spacing_multiplier</item>
+        <item name="android:paddingTop">@dimen/detail_body_top_margin</item>
+        <item name="android:layout_marginLeft">@dimen/keyline_margin</item>
+        <item name="android:layout_marginRight">@dimen/keyline_margin</item>
+        <item name="android:paddingBottom">@dimen/detail_body_bottom_margin</item>
     </style>
+
 
 </resources>
